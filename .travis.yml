@@ -14,8 +14,8 @@ before_install:
 install:
   - go get -v -t ./twitter
 script:
-  - go test -v ./twitter
+  - cover
   - go vet ./...
   - golint ./...
   - test -z "$(go fmt ./...)"
-  - $HOME/gopath/bin/goveralls
+  - $HOME/gopath/bin/goveralls -coverprofile=cover/twitter.out -service=travis-ci
