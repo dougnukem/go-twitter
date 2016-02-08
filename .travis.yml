@@ -14,7 +14,7 @@ before_install:
 install:
   - go get -v -t ./twitter
 script:
-  - cover
+  - ./cover
   - go vet ./...
   - golint ./...
   - test -z "$(go fmt ./...)"
