@@ -7,6 +7,9 @@ go:
 before_install:
   - go get golang.org/x/tools/cmd/vet
   - go get github.com/golang/lint/golint
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 install:
   - go get -v -t ./twitter
 script:
@@ -14,3 +17,4 @@ script:
   - go vet ./...
   - golint ./...
   - test -z "$(go fmt ./...)"
+  - $HOME/gopath/bin/goveralls
