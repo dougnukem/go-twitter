@@ -1,6 +1,8 @@
 package twitter
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -97,4 +99,306 @@ func TestStream_Unknown(t *testing.T) {
 
 	msg := getMessage(msgJSON)
 	assert.IsType(t, map[string]interface{}{}, msg)
+}
+
+func TestStream_Stop(t *testing.T) {
+	httpClient, _, server := testServer()
+	defer server.Close()
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.User(nil)
+	assert.NoError(t, err)
+	stream.Stop()
+
+}
+
+func TestStream_User(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	mux.HandleFunc("/1.1/user.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w, `{"friends": [666024290140217347, 666024290140217349, 666024290140217342]}`+"\r\n"+"\r\n")
+		default:
+			// Only allow first request
+			http.Error(w, "Stream API not available!", 130)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.User(nil)
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+}
+
+func TestStream_PublicSample(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	mux.HandleFunc("/1.1/statuses/sample.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		default:
+			// Only allow first request
+			http.Error(w, "Stream API not available!", 130)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Sample(nil)
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+
+}
+
+func TestStream_PublicFilter(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	mux.HandleFunc("/1.1/statuses/filter.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "POST", r)
+		assertQuery(t, map[string]string{"track": "gophercon,golang"}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		default:
+			// Only allow first request
+			http.Error(w, "Stream API not available!", 130)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Filter(&StreamFilterParams{Track: []string{"gophercon", "golang"}})
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+
+}
+
+func TestStream_PublicFirehose(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	mux.HandleFunc("/1.1/statuses/firehose.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{"count": "100"}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		default:
+			// Only allow first request
+			http.Error(w, "Stream API not available!", 130)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Firehose(&StreamFirehoseParams{Count: 100})
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+}
+
+func TestStream_Site(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	mux.HandleFunc("/1.1/site.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{"follow": "666024290140217347,666024290140217349"}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		default:
+			// Only allow first request
+			http.Error(w, "Stream API not available!", 130)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Site(&StreamSiteParams{Follow: []string{"666024290140217347", "666024290140217349"}})
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+}
+
+func TestStream_Http503(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	httpErrorSent := make(chan bool)
+	mux.HandleFunc("/1.1/statuses/sample.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		case 1:
+			// Exponential backoff
+			http.Error(w, "Service Unavailable", 503)
+			httpErrorSent <- true
+		default:
+			// Only allow first 2 requests
+			http.Error(w, "Unknown", 404)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Sample(nil)
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+
+	assertReceive(t, httpErrorSent, defaultTestTimeout, "stream expected to receive error")
+}
+
+func TestStream_HttpBackoff420(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	httpErrorSent := make(chan bool)
+	mux.HandleFunc("/1.1/statuses/sample.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		case 1:
+			// aggressive Exponential backoff
+			http.Error(w, "Rate Limited", 420)
+			httpErrorSent <- true
+		default:
+			// Only allow first 2 requests
+			http.Error(w, "Unknown", 404)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Sample(nil)
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+
+	assertReceive(t, httpErrorSent, defaultTestTimeout, "stream expected to receive error")
+}
+
+func TestStream_HttpError404(t *testing.T) {
+	httpClient, mux, server := testServer()
+	defer server.Close()
+
+	reqCount := 0
+	httpErrorSent := make(chan bool)
+	mux.HandleFunc("/1.1/statuses/sample.json", func(w http.ResponseWriter, r *http.Request) {
+		assertMethod(t, "GET", r)
+		assertQuery(t, map[string]string{}, r)
+		switch reqCount {
+		case 0:
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Transfer-Encoding", "chunked")
+			fmt.Fprintf(w,
+				`{"text": "Gophercon talks!"}`+"\r\n"+
+					`{"text": "Gophercon super talks!"}`+"\r\n",
+			)
+		case 1:
+			// disconnect no reconnect
+			http.Error(w, "Unknown", 404)
+			httpErrorSent <- true
+		default:
+			// Only allow first 2 requests
+			http.Error(w, "Unknown", 404)
+		}
+		reqCount++
+	})
+
+	client := NewClient(httpClient)
+	stream, err := client.Streams.Sample(nil)
+	assert.NoError(t, err)
+	defer stream.Stop()
+
+	handled := testHandleStream(stream)
+
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+	assertReceive(t, handled, defaultTestTimeout, "stream expected to handle messages but timedout")
+
+	assertReceive(t, httpErrorSent, defaultTestTimeout, "stream expected to receive error")
 }

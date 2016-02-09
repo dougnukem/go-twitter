@@ -51,12 +51,7 @@ func TestSleepOrDone(t *testing.T) {
 		completed <- true
 	}()
 
-	select {
-	case <-completed:
-		break
-	case <-time.After(time.Second * 1):
-		t.Errorf("sleepOrDone did not return in %v duration", wait)
-	}
+	assertReceive(t, completed, defaultTestTimeout, "sleepOrDone did not return in %v duration", wait)
 
 	// Wait longer than timeout test because we will be returning sooner because there is a done channel message
 	wait = time.Second * 5
@@ -66,10 +61,5 @@ func TestSleepOrDone(t *testing.T) {
 		completed <- true
 	}()
 
-	select {
-	case <-completed:
-		break
-	case <-time.After(time.Second * 1):
-		t.Errorf("sleepOrDone expected to return immediately but timed out")
-	}
+	assertReceive(t, completed, defaultTestTimeout, "sleepOrDone expected to return immediately but timed out")
 }
