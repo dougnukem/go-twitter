@@ -2,6 +2,7 @@ package twitter
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,5 +27,49 @@ func TestScanLines(t *testing.T) {
 		advance, token, _ := scanLines(c.input, c.atEOF)
 		assert.Equal(t, c.advance, advance)
 		assert.Equal(t, c.token, token)
+	}
+}
+
+func TestStopped(t *testing.T) {
+	notStoppedCh := make(chan struct{})
+	isStopped := stopped(notStoppedCh)
+	assert.Equal(t, false, isStopped)
+
+	stoppedCh := make(chan struct{}, 2)
+	stoppedCh <- struct{}{}
+	isStopped = stopped(stoppedCh)
+	assert.Equal(t, true, isStopped)
+}
+
+func TestSleepOrDone(t *testing.T) {
+	doneCh := make(chan struct{}, 2)
+	wait := time.Nanosecond * 20
+	completed := make(chan bool)
+
+	go func() {
+		sleepOrDone(wait, doneCh)
+		completed <- true
+	}()
+
+	select {
+	case <-completed:
+		break
+	case <-time.After(time.Second * 1):
+		t.Errorf("sleepOrDone did not return in %v duration", wait)
+	}
+
+	// Wait longer than timeout test because we will be returning sooner because there is a done channel message
+	wait = time.Second * 5
+	doneCh <- struct{}{}
+	go func() {
+		sleepOrDone(wait, doneCh)
+		completed <- true
+	}()
+
+	select {
+	case <-completed:
+		break
+	case <-time.After(time.Second * 1):
+		t.Errorf("sleepOrDone expected to return immediately but timed out")
 	}
 }
