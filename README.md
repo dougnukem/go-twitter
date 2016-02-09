@@ -1,6 +1,6 @@
 
 
-# go-twitter [![Build Status](https://travis-ci.org/dghubble/go-twitter.png)](https://travis-ci.org/dghubble/go-twitter) [![Coverage](https://gocover.io/_badge/github.com/dghubble/go-twitter/twitter)](https://gocover.io/github.com/dghubble/go-twitter/twitter) [![GoDoc](https://godoc.org/github.com/dghubble/go-twitter?status.png)](https://godoc.org/github.com/dghubble/go-twitter)
+# go-twitter [![Build Status](https://travis-ci.org/dghubble/go-twitter.png)](https://travis-ci.org/dghubble/go-twitter) [![Coverage](https://gocover.io/_badge/github.com/dghubble/go-twitter/twitter)](https://gocover.io/github.com/dghubble/go-twitter/twitter)[![Go Report Card](http://goreportcard.com/badge/dougnukem/go-twitter)](http://goreportcard.com/report/dougnukem/go-twitter) [![GoDoc](https://godoc.org/github.com/dghubble/go-twitter?status.png)](https://godoc.org/github.com/dghubble/go-twitter)
 <img align="right" src="https://storage.googleapis.com/dghubble/gopher-on-bird.png">
 
 go-twitter is a Go client library for the [Twitter API](https://dev.twitter.com/rest/public). Check the [Usage](#usage) section or try the [examples](/examples) to see how to access the Twitter API.
@@ -128,7 +128,7 @@ If you run this in your main goroutine, it will receive messages forever unless 
 
 ### Demux
 
-Receiving messages of type `interface{}` isn't very nice, it means you'll have to type switch and probably filter out message types you don't care about. 
+Receiving messages of type `interface{}` isn't very nice, it means you'll have to type switch and probably filter out message types you don't care about.
 
 For this, try the experimental `DefaultDemux` which receives messages and type switches them to call a function with typed messages.
 
