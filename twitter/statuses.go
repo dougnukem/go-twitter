@@ -14,7 +14,7 @@ import (
 type Tweet struct {
 	Contributors         []Contributor     `json:"contributors"`
 	Coordinates          *Coordinates      `json:"coordinates"`
-	CreatedAt            string            `json:"created_at"`
+	CreatedAt            Time              `json:"created_at"`
 	CurrentUserRetweet   *TweetIdentifier  `json:"current_user_retweet"`
 	Entities             *Entities         `json:"entities"`
 	FavoriteCount        int               `json:"favorite_count"`

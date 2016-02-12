@@ -7,7 +7,7 @@ import (
 
 // DirectMessage is a direct message to a single recipient.
 type DirectMessage struct {
-	CreatedAt           string    `json:"created_at"`
+	CreatedAt           Time      `json:"created_at"`
 	Entities            *Entities `json:"entities"`
 	ID                  int64     `json:"id"`
 	IDStr               string    `json:"id_str"`

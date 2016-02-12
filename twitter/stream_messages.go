@@ -102,7 +102,7 @@ type directMessageNotice struct {
 // https://dev.twitter.com/streaming/overview/messages-types#Events_event
 type Event struct {
 	Event     string `json:"event"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt Time   `json:"created_at"`
 	Target    *User  `json:"target"`
 	Source    *User  `json:"source"`
 	// TODO: add List or deprecate it

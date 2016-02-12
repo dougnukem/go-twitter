@@ -10,7 +10,7 @@ import (
 // https://dev.twitter.com/overview/api/users
 type User struct {
 	ContributorsEnabled            bool          `json:"contributors_enabled"`
-	CreatedAt                      string        `json:"created_at"`
+	CreatedAt                      Time          `json:"created_at"`
 	DefaultProfile                 bool          `json:"default_profile"`
 	DefaultProfileImage            bool          `json:"default_profile_image"`
 	Description                    string        `json:"description"`
