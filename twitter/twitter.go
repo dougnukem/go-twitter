@@ -18,6 +18,7 @@ type Client struct {
 	Users          *UserService
 	Followers      *FollowerService
 	DirectMessages *DirectMessageService
+	Applications   *ApplicationService
 	Streams        *StreamService
 }
 
@@ -32,6 +33,7 @@ func NewClient(httpClient *http.Client) *Client {
 		Users:          newUserService(base.New()),
 		Followers:      newFollowerService(base.New()),
 		DirectMessages: newDirectMessageService(base.New()),
+		Applications:   newApplicationService(base.New()),
 		Streams:        newStreamService(httpClient, base.New()),
 	}
 }
